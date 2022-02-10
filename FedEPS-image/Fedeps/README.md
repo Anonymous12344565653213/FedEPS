@@ -5,7 +5,7 @@ Learning **. on image dataset.
 
 We do our experiments on MNIST, CIFAR-10, and SVHN datasets.
 
-you should place your data in `./fedEPS/data/mnist` (mnist for example)
+you should place your data in `.FedEPS\FedEPS-image\data\mnist` (mnist for example)
 
 ## Getting Started
 

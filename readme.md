@@ -9,6 +9,7 @@ Learning **.
 - Pytorch  `conda install torch`(To install PyTorch, see installation instructions on the [PyTorch website](https://pytorch.org/get-started/locally).)
 - Numpy   `conda install numpy`
 - Pandas   `conda install pandas`
+- Other requirement is listed in foders `FedEPS-image` and `FedEPS-text`
 
 ## Instruction
 

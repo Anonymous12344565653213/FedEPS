@@ -1,0 +1,69 @@
+Warm up stage:accuracy: tensor(19.5874)
+Warm up stage:accuracy: tensor(19.5874)
+Warm up stage:accuracy: tensor(19.5874)
+Warm up stage:accuracy: tensor(19.5874)
+Warm up stage:accuracy: tensor(19.5913)
+Warm up stage:accuracy: tensor(19.6412)
+Warm up stage:accuracy: tensor(19.6412)
+Warm up stage:accuracy: tensor(20.0907)
+Warm up stage:accuracy: tensor(22.7374)
+Warm up stage:accuracy: tensor(22.7374)
+Warm up stage:accuracy: tensor(23.6517)
+Warm up stage:accuracy: tensor(27.8772)
+Warm up stage:accuracy: tensor(27.8772)
+Warm up stage:accuracy: tensor(27.8772)
+Warm up stage:accuracy: tensor(28.6762)
+Warm up stage:accuracy: tensor(30.5163)
+Warm up stage:accuracy: tensor(30.5163)
+Warm up stage:accuracy: tensor(33.9236)
+Warm up stage:accuracy: tensor(36.0825)
+Warm up stage:accuracy: tensor(38.9329)
+Warm up stage:accuracy: tensor(38.9329)
+Warm up stage:accuracy: tensor(39.1249)
+Warm up stage:accuracy: tensor(42.2941)
+Warm up stage:accuracy: tensor(42.2941)
+Warm up stage:accuracy: tensor(42.2941)
+Warm up stage:accuracy: tensor(46.3660)
+Warm up stage:accuracy: tensor(46.3660)
+Warm up stage:accuracy: tensor(46.3660)
+Warm up stage:accuracy: tensor(48.8553)
+Warm up stage:accuracy: tensor(51.8400)
+total_num_list [200350180, 139757656]
+===============================================
+Participants: [82 12 32 52  8 51 31 23  3 71]
+Accuracy before training:
+[tensor(55.9055), tensor(75.7812), tensor(41.7323), tensor(32.0312), tensor(55.1181), tensor(33.0709), tensor(38.2812), tensor(54.6875), tensor(51.1811), tensor(54.6875)]
+Accuracy After finetune:
+[tensor(66.1417), tensor(92.9688), tensor(36.2205), tensor(35.1562), tensor(59.0551), tensor(19.6850), tensor(44.5312), tensor(57.8125), tensor(59.8425), tensor(57.8125)]
+Accuracy After distillation:
+[tensor(55.1181), tensor(69.5312), tensor(23.6220), tensor(70.3125), tensor(62.2047), tensor(54.3307), tensor(39.8438), tensor(53.9062), tensor(26.7717), tensor(64.0625)]
+=============================================
+average accuracy 43.538554809093476
+average accuracy list [43.538554809093476]
+-------------------------------------------
+total_num_list [200350180, 139757656, 139550935]
+===============================================
+Participants: [28 46 29 13 21 68 10 54 81 55]
+Accuracy before training:
+[tensor(9.4488), tensor(13.2812), tensor(4.6875), tensor(72.6562), tensor(50.), tensor(48.8189), tensor(70.0787), tensor(53.1250), tensor(25.), tensor(18.8976)]
+Accuracy After finetune:
+[tensor(10.2362), tensor(7.8125), tensor(3.1250), tensor(84.3750), tensor(54.6875), tensor(54.3307), tensor(93.7008), tensor(53.9062), tensor(28.1250), tensor(19.6850)]
+Accuracy After distillation:
+[tensor(17.3228), tensor(14.8438), tensor(16.4062), tensor(76.5625), tensor(68.7500), tensor(44.0945), tensor(78.7402), tensor(50.), tensor(16.4062), tensor(25.9843)]
+=============================================
+average accuracy 43.85991307020188
+average accuracy list [43.538554809093476, 43.85991307020188]
+-------------------------------------------
+total_num_list [200350180, 139757656, 139550935, 134738061]
+===============================================
+Participants: [ 7 16 49 57 24 20 31 67 27  5]
+Accuracy before training:
+[tensor(47.6562), tensor(72.4409), tensor(29.6875), tensor(55.9055), tensor(35.1562), tensor(53.1250), tensor(43.7500), tensor(48.0315), tensor(13.2812), tensor(67.7165)]
+Accuracy After finetune:
+[tensor(50.), tensor(80.3150), tensor(32.0312), tensor(56.6929), tensor(40.6250), tensor(64.0625), tensor(51.5625), tensor(55.1181), tensor(10.9375), tensor(78.7402)]
+Accuracy After distillation:
+[tensor(36.7188), tensor(70.8661), tensor(45.3125), tensor(70.8661), tensor(28.9062), tensor(72.6562), tensor(31.2500), tensor(54.3307), tensor(17.9688), tensor(68.5039)]
+=============================================
+average accuracy 44.150574996471406
+average accuracy list [43.538554809093476, 43.85991307020188, 44.150574996471406]
+-------------------------------------------

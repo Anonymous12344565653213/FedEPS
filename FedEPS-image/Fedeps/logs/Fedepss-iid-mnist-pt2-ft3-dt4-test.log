@@ -1,0 +1,12 @@
+Warm up stage:accuracy: tensor(37.5700)
+Warm up stage:accuracy: tensor(55.1200)
+Warm up stage:accuracy: tensor(67.4900)
+Warm up stage:accuracy: tensor(71.6300)
+Warm up stage:accuracy: tensor(81.8000)
+training iter: 0 of 400
+average accuracy 74.35718490600586
+average train accuracy: 80.12422424316406
+average accuracy ct 81.80000305175781
+average accuracy list [74.35718490600586]
+averge_train_accuracy_list [80.12422424316406]
+averge_ct_accuracy_list [81.80000305175781]

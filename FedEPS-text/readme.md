@@ -36,11 +36,11 @@ python  federated_main.py  --log_fn fedeps-ag-noniid.log  --iid 0 --gpu 1 --gpui
 
 ```powershell
 #iid
-python  federated_main.py  --log_fn fedeps-yahoo-iid.log  --iid 1 --gpu 1 --gpuid cuda:1 --epochs 200  --dataset yahoo --num_classes 4 --local_bs 32 --bert_model bert-base-uncased --data_dir /data/ag --task_name a --output_dir logs --label_rate 0.01 --num_users 50 
+python  federated_main.py  --log_fn fedeps-yahoo-iid.log  --iid 1 --gpu 1 --gpuid cuda:1 --epochs 200  --dataset yahoo --num_classes 4 --local_bs 32 --bert_model bert-base-uncased --data_dir /data/yahoo --task_name a --output_dir logs --label_rate 0.01 --num_users 50 
 ```
 
 ```powershell
 #noniid
-python  federated_main.py  --log_fn fedeps-yahoo-noniid.log  --iid 0 --gpu 1 --gpuid cuda:1 --epochs 200  --dataset yahoo --num_classes 4 --local_bs 32 --bert_model bert-base-uncased --data_dir /data/ag --task_name a --output_dir logs --label_rate 0.01 --num_users 50 
+python  federated_main.py  --log_fn fedeps-yahoo-noniid.log  --iid 0 --gpu 1 --gpuid cuda:1 --epochs 200  --dataset yahoo --num_classes 4 --local_bs 32 --bert_model bert-base-uncased --data_dir /data/yahoo --task_name a --output_dir logs --label_rate 0.01 --num_users 50 
 ```
 

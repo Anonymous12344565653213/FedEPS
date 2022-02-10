@@ -1,5 +1,4 @@
-# FedEPS:  Efficient Personalized Semi-supervised Federated
-Learning 
+# FedEPS:  Efficient Personalized Semi-supervised Federated Learning 
 
 A PyTorch implementation for the paper **FedEPS:  Efficient Personalized Semi-supervised Federated
 Learning **. on text dataset.

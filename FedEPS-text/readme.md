@@ -3,9 +3,9 @@
 A PyTorch implementation for the paper **FedEPS:  Efficient Personalized Semi-supervised Federated
 Learning **. on text dataset.
 
-We do our experiments on MNIST, CIFAR-10, and SVHN datasets.
+We do our experiments on AG and Yahoo datasets.
 
-you should place your data in `./fedEPS/data/mnist` (mnist for example)
+
 
 ## Getting Started
 
@@ -17,7 +17,8 @@ you should place your data in `./fedEPS/data/mnist` (mnist for example)
 
 ## Some Examples
 
-We provide some examples here.
+We provide some examples here. 
+Please `cd src` first
 
 #### AG
 

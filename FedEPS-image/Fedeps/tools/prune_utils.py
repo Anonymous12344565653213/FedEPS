@@ -202,6 +202,8 @@ def pseudo_prune_network_sliming(model, percent, backbone, dataset):
 def recover_network(model, cfg_mask, backbone,dataset,args):
     if 'mnist' in backbone.lower():
         cfg = [32, 'M', 48, 'M', 64]
+    elif backbone=='CNN_Cifar_pruned':
+        cfg=[32, 'M', 128, 'M', 256]
     else:
         cfg = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512]  ## complete model cfg
     if cfg!=None:
@@ -341,8 +343,10 @@ def prune_network_sliming(model,percent,backbone,dataset,device):
         if(backbone=="vgg"):
             newmodel=vgg(cfg)
         else:
-            newmodel = get_pruned_backbone(backbone, cfg, dataset=dataset)  # 函数加载个backbone
-
+            newmodel = get_pruned_backbone(backbone, cfg=cfg, dataset=dataset)  # 函数加载个backbone
+        # print("newmodel",newmodel)
+        # print("oldmodel",model)
+        # print(ac)
         # if(backbone=="mnist"):
         #     newmodel=CNN_BN_Mnist(cfg)
         # newmodel = vgg(cfg)
@@ -434,8 +438,9 @@ def prune_network(model_weights, cfg_mask, backbone, dataset,args):
     if 'mnist' in backbone.lower():
         cfg = [32, 'M', 48, 'M', 64]
     else:
-        cfg = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512,
-               512]  ## complete model cfg
+        # cfg = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512,
+        #        512]  ## complete model cfg
+        cfg = [32, 'M', 128, 'M', 256]
 
     if cfg != None:
         model = get_pruned_backbone(backbone, cfg, dataset=dataset)  # 函数加载个backbone 原始完整model

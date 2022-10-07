@@ -41,7 +41,6 @@ def get_args():
     parser.add_argument('--finetunetimes', type = int, default = 5)
     parser.add_argument('--prunetimes', type=int, default=5)
     # training with sparsity
-
     parser.add_argument('--pr',  action='store_true', help='pruning global model')
     parser.add_argument('--fine_tune',  action='store_true', help='fine tune model')
     parser.add_argument('--sparsity-regularization', '-sr', dest='sr', action='store_true',

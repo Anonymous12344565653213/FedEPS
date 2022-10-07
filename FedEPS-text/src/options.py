@@ -31,7 +31,8 @@ def args_parser():
 
     # model arguments
     
-    parser.add_argument('--model', type = str, default = 'BERT', help = 'model name')
+    parser.add_argument('--model_G', type = str, default = 'BERT', help = 'model name')
+    parser.add_argument('--model', type=str, default='TINYBERT', help='model name')
     parser.add_argument('--kernel_num', type = int, default = 9, help = 'number of each kind of kernel')
     parser.add_argument('--kernel_size', type = str, default = '3,4,5', help = 'comma-separated kernel size to \
                         use for convolution')

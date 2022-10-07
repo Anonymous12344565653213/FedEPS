@@ -82,7 +82,6 @@ def main(device, args):
     log_fp = open(log_file, "w+")
     stderr=sys.stderr
     # sys.stderr=log_fp
-
     # define loss function
     loss1_func = nn.CrossEntropyLoss()
     loss2_func = softmax_kl_loss
@@ -130,25 +129,49 @@ def main(device, args):
     if (args.heat == 0):  ##Load pre_trained model
         if (args.backbone == "Vgg_backbone"):
             if (args.dataset == "cifar10"):
-                model_glob_heat = torch.load('Model_Cifar_vgg19.pkl', map_location='cpu')
+                model_glob = torch.load('Model_Cifar_vgg19.pkl', map_location='cpu')
+                model_glob2 = get_model('global', 'cifar', dataset='cifar').to(device)
+                model_glob.to(device)
             if(args.dataset=="svhn"):
-                model_glob_heat=torch.load('Model_Svhn_vgg19.pkl', map_location='cpu')
+                model_glob=torch.load('Model_Svhn_vgg19.pkl', map_location='cpu')
+                model_glob2 = get_model('global', 'cifar', dataset='cifar').to(device)
+                model_glob.to(device)
+            model_glob_sum = sum(p.numel() for p in model_glob.parameters())
+            model_glob2_sum = sum(p.numel() for p in model_glob2.parameters())
+            #test VGG model
+            test_loader = torch.utils.data.DataLoader(
+                dataset=get_dataset(
+                    transform=get_aug(args.dataset, False, train_classifier=False),
+                    train=False,
+                    **dataset_kwargs),
+                shuffle=False,
+                **dataloader_kwargs
+            )
+            model_glob.eval()
+            acc, loss_train_test_labeled = test_img(model_glob, test_loader, args)
+            print("Big model performance:",acc)
+            print("parameters number of vgg:",model_glob_sum)
+            print("parameters number of cnn:", model_glob2_sum)
         else:
                 model_glob_heat = torch.load('Model_Mnist_vgg19.pkl', map_location='cpu')
-        model_glob_sum = sum(p.numel() for p in model_glob_heat.parameters())
-        model_glob_heat.to(device)
+        # model_glob_sum = sum(p.numel() for p in model_glob_heat.parameters())
+        # model_glob_heat.to(device)
     else:
         if (args.backbone == "Vgg_backbone"):
             model_glob = get_model('global', args.backbone, dataset=args.dataset).to(device)
+            model_glob2=get_model('global', "Mnist", dataset='cifar').to(device)
         if (args.backbone == "vgg"):
             model_glob = vgg().to(device)
+            model_glob2 = get_model('global', 'cifar', dataset='cifar').to(device)
         if (args.backbone == "Mnist"):
             model_glob = get_model('global', args.backbone, dataset=args.dataset).to(device)
 
 
         model_glob_sum = sum(p.numel() for p in model_glob.parameters())
+        model_glob2_sum = sum(p.numel() for p in model_glob2.parameters())
 
         print("parameters number of vgg:",model_glob_sum)
+        print("parameters number of cnn:", model_glob2_sum)
 
 
 
@@ -161,10 +184,9 @@ def main(device, args):
         best_train_acc = float('-inf')
         lr_scheduler = {}
         accuracy_log = []
-
-        # preheat
-        print("--------------------warm up-------------------------",args.heat_epochs)
-        for iter in range(args.heat_epochs):
+        #To obtain a well-trained VGG Using labeled data
+        print("-------------------Get Global Big Model---------------------")
+        for iter in range(200):
             model_glob.train()
             optimizer = torch.optim.SGD(model_glob.parameters(), lr=0.01)
             # Load labeled data :batch size is setted here
@@ -177,16 +199,11 @@ def main(device, args):
                 if torch.cuda.is_available():
                     labels = labels.to(device)
                     images1=images1.to(device)
-
-
                 z1= model_glob(images1)
-
                 loss = loss1_func(z1, labels)
-
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-
             # test model
             if iter % 1 == 0:
                 if iter>=2:
@@ -202,31 +219,139 @@ def main(device, args):
                 )
                 model_glob.eval()
                 acc, loss_train_test_labeled = test_img(model_glob, test_loader, args)
+
                 if acc>best_test_acc:
                     best_test_acc = acc
                 accuracy.append(str(acc))
                 if iter%1==0:
                     print('Round {:3d}, Best Test Acc {:.2f}%'.format(iter, acc))
-
                 del test_loader
                 gc.collect()
                 torch.cuda.empty_cache()
             print("Warm up stage:accuracy:",best_test_acc,file=log_fp, flush=True)
-        if(args.dataset=="svhn"):
-            print("save model as Model_Svhn_vgg19.pkl")
-            torch.save(model_glob, 'Model_Svhn_vgg19.pkl')
-        if(args.dataset=="cifar10"):
+        if (args.dataset == "cifar10"):
             print("save model as Model_Cifar_vgg19.pkl")
             torch.save(model_glob, 'Model_Cifar_vgg19.pkl')
-        if(args.dataset=='mnist'):
-            print("save model as Model_Mnist_vgg19.pkl")
-            torch.save(model_glob,'Model_Mnist_vgg19.pkl')
+        if (args.dataset == "svhn"):
+            print("save model as Model_Svhn_vgg19.pkl")
+            torch.save(model_glob,'Model_Svhn_vgg19.pkl')
 
 
+        # preheat
+    accuracy=[]
+    best_test_acc=0
+    print("model global 2:",model_glob2)
+    print("--------------------warm up-------------------------",args.heat_epochs)
+    for iter in range(args.heat_epochs):
+        model_glob2.train()
+        optimizer = torch.optim.SGD(model_glob2.parameters(), lr=0.01)
+        # Load labeled data :batch size is setted here
+        train_loader_labeled = torch.utils.data.DataLoader(
+            dataset=DatasetSplit(dataset_train, dict_users_labeled),  # load labeled data from dataset_train
+            shuffle=True,
+            **dataloader_kwargs
+        )
+        for batch_idx, ((images1, images2), labels) in enumerate(train_loader_labeled):
+            if torch.cuda.is_available():
+                labels = labels.to(device)
+                images1=images1.to(device)
+            with torch.no_grad():
+                z1 = model_glob(images1)
+                z2 = softmax(z1, args.T)
+            model_glob2.train()
+            pred= model_glob2(images1)
+            loss2 = loss2_func(softmax(pred, args.T), z2)
+            # print("Distill Loss:",loss2)
+            loss1 = loss1_func(pred, labels)
+            # print("Classification Loss:",loss1)
+            loss=loss1+loss2
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+        # test model
+        if iter % 1 == 0:
+            if iter>=2:
+                dataset_kwargs['download'] = False
+            # Load test set
+            test_loader = torch.utils.data.DataLoader(
+                dataset=get_dataset(
+                    transform=get_aug(args.dataset, False, train_classifier=False),
+                    train=False,
+                    **dataset_kwargs),
+                shuffle=False,
+                **dataloader_kwargs
+            )
+            model_glob2.eval()
+            acc, loss_train_test_labeled = test_img(model_glob2, test_loader, args)
+            train_acc, loss_train = test_img2(model_glob2, train_loader_labeled, args)
+            if acc>best_test_acc:
+                best_test_acc = acc
+            accuracy.append(str(acc))
+            if iter%1==0:
+                print('Round {:3d}, Best Test Acc {:.2f}%'.format(iter, acc))
+                print('Round {:3d}, Best Train Acc {:.2f}%'.format(iter, train_acc))
+
+            del test_loader
+            gc.collect()
+            torch.cuda.empty_cache()
+        print("Warm up stage:accuracy:",best_test_acc,file=log_fp, flush=True)
+        #Model-prunning at server-side
+        # if (args.backbone == "Vgg_backbone"):
+        #     print("begin server prunning")
+        #     model_glob.backbone, cfg_mask = prune_network_sliming(model_glob.backbone, args.prunerate, args.backbone,
+        #                                                            args.dataset, args.device)
+        #     model_glob.teacher = nn.Sequential(model_glob.backbone, model_glob.fc)
+        #     # fine-tune
+        #     for iter in range(3):
+        #         model_glob.train()
+        #         optimizer = torch.optim.SGD(model_glob.parameters(), lr=0.01)
+        #         # Load labeled data :batch size is setted here
+        #         train_loader_labeled = torch.utils.data.DataLoader(
+        #             dataset=DatasetSplit(dataset_train, dict_users_labeled),  # load labeled data from dataset_train
+        #             shuffle=True,
+        #             **dataloader_kwargs
+        #         )
+        #         for batch_idx, ((images1, images2), labels) in enumerate(train_loader_labeled):
+        #             if torch.cuda.is_available():
+        #                 labels = labels.to(device)
+        #                 images1 = images1.to(device)
+        #             z1 = model_glob(images1)
+        #             loss = loss1_func(z1, labels)
+        #             optimizer.zero_grad()
+        #             loss.backward()
+        #             optimizer.step()
+        #     # evaluate the pre-trained model
+        #     test_loader = torch.utils.data.DataLoader(
+        #         dataset=get_dataset(
+        #             transform=get_aug(args.dataset, False, train_classifier=False),
+        #             train=False,
+        #             **dataset_kwargs),
+        #         shuffle=False,
+        #         **dataloader_kwargs
+        #     )
+        #     model_glob.eval()
+        #     acc, loss_train_test_labeled = test_img(model_glob, test_loader, args)
+        # Save the model
+    if(args.dataset=="svhn"):
+        print("save model as Model_Svhn_vgg19.pkl")
+        torch.save(model_glob, 'Model_Svhn_vgg19.pkl')
+        torch.save(model_glob2, 'Model_Svhn_CNN.pkl')
+    if(args.dataset=="cifar10"):
+        print("save model as Model_Cifar_vgg19.pkl")
+        print("save model as Model_Cifar_CNN.pkl")
+        torch.save(model_glob, 'Model_Cifar_vgg19.pkl')
+        torch.save(model_glob2, 'Model_Cifar_CNN.pkl')
+    if(args.dataset=='mnist'):
+        print("save model as Model_Mnist_vgg19.pkl")
+        torch.save(model_glob,'Model_Mnist_vgg19.pkl')
+
+    print("New model accuracy:",acc)
+    model_glob_heat = model_glob2
+    model_glob_sum = sum(p.numel() for p in model_glob_heat.parameters())
+    print("model global sum:",model_glob_sum)
 
 
-        model_glob_heat = model_glob
-        model_glob_sum = sum(p.numel() for p in model_glob_heat.parameters())
 
 
 
@@ -296,25 +421,20 @@ def main(device, args):
 
             dict_unlabeled_highscore = highscoresampling(dataset_train, dict_users_unlabeled_train[idx], args.threhold,
                                                          model_local, device)
-
             print("unlabeled dataset", len(dict_users_unlabeled_train[idx]))
             print("fine_tuned dataset:", len(dict_unlabeled_highscore))
             if len(dict_unlabeled_highscore)==0:
                 dict_unlabeled_highscore=dict_users_unlabeled_train[idx]
             model_label=copy.deepcopy(model_local)
-
             optimizer = torch.optim.SGD(model_local.parameters(), lr=0.01)
             model_local.train()  # Begin to train local model
             #Train local data
             print("{:3d} begin trainning".format(idx))
-
-
             ###save  local model
             for j in range(args.local_ep):
                 for i, ((images1, images2), labels) in enumerate(train_loader_unlabeled):
 
                     images1=images1.to(device)
-
                     z1= model_local(images1.to(device, non_blocking=True))
                     with torch.no_grad():
                         label1=model_label(images1)#generate psudo label
@@ -330,7 +450,6 @@ def main(device, args):
 
 
             print("begin prune")
-
             model_local_sum = sum(p.numel() for p in model_local.parameters())
             print("local parameters before training:",model_local_sum)
             ###prune
@@ -341,16 +460,16 @@ def main(device, args):
                                                                   args.dataset, args.device)
                     model_local.classifier = model_classifier
                 else:
-                    model_local.backbone, cfg_mask = prune_network_sliming(model_local.backbone,args.prunerate,args.backbone,
+                    # backbone=args.backbone
+                    backbone='CNN_Cifar_pruned'
+                    model_local.backbone, cfg_mask = prune_network_sliming(model_local.backbone,args.prunerate,backbone,
                                                                            args.dataset,args.device)
-
                     model_local.teacher = nn.Sequential(model_local.backbone, model_local.fc)
                     model_local_sum=sum(p.numel() for p in model_local.teacher.parameters())
                     model_pruned_statisic[idx] += 1
                 cfg_mask_locals.append(cfg_mask)
                 print("End prune~~~times of been pruned",model_pruned_statisic[idx])#咋传的参数这么多
                 print("local parameters after prunning:",model_local_sum)
-
             else:
                 cfg_local_mask2 = []
                 for k, m in enumerate(model_local.backbone.modules()):
@@ -364,8 +483,6 @@ def main(device, args):
                 print("Don not prune")
 
             print("begin finetune")
-
-
             optimizer = torch.optim.SGD(model_local.parameters(), lr=0.01)
             train_loader_unlabeled_finetune = torch.utils.data.DataLoader(
                 dataset=DatasetSplit(dataset_train, dict_unlabeled_highscore),  # load unlabeled data for user i
@@ -377,17 +494,14 @@ def main(device, args):
                 for i, ((images1, images2), labels) in enumerate(train_loader_unlabeled_finetune):
                     labels=labels.to(device)
                     images1 = images1.to(device)
-
                     z1 = model_local(images1)
                     with torch.no_grad():
                         label1 = model_label(images1)
                         label1_hard = label1.argmax(dim=1)
-
                     optimizer.zero_grad()
                     loss = loss1_func(z1, label1_hard)
                     loss.backward()
                     optimizer.step()
-
             ###Finetune
             ##test finetuned model
             dataset_kwargs['download'] = False
@@ -431,7 +545,9 @@ def main(device, args):
             model=copy.deepcopy(model_list[idx])
             cfg_local_mask=cfg_mask_locals[i]
             i=i+1
-            newmodel=recover_network(model.backbone, cfg_local_mask, args.backbone, dataset=args.dataset, args=args)
+            # backbone=args.backbone
+            backbone = 'CNN_Cifar_pruned'
+            newmodel=recover_network(model.backbone, cfg_local_mask, backbone, dataset=args.dataset, args=args)
             cfg_local_mask2 = []
             for k, m in enumerate(newmodel.modules()):
                 if isinstance(m, nn.BatchNorm2d):
@@ -482,26 +598,34 @@ def main(device, args):
                                 z2=softmax(z1, args.T)
                                 weight_list=list_2[i]
                                 weight=weight_list[j]/(sum(weight_list)-weight_list[i])
-                                print("i:",i,"j",j)
-                                print("weight:",weight)
+                                # print("i:",i,"j",j)
+                                # print("weight:",weight)
                                 teacher_logits+=weight*z2
+                                z3=model_glob(images1)
+                                z3=softmax(z3, args.T)
                         j = j + 1
                     model.train()
                     model.zero_grad()
-                    optimizer = torch.optim.SGD(model.parameters(), lr=0.02)
+                    optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
                     pred = model(images1)
                     loss1 = loss1_func(pred, labels)
-                    print("loss1",loss1)
+                    # print("loss1",loss1)
                     loss2 = loss2_func(softmax(pred, args.T), teacher_logits)
-                    print("loss_multi",loss2)
-                    loss = loss1 + args.lamda*loss2
+                    loss3=loss2_func(softmax(pred, args.T), z3)
+                    # print("loss_multi",loss2)
+                    # print("loss1:",loss1)
+                    # print("loss2",loss2)
+                    # print("loss3",loss3)
+                    loss = loss1 + args.lamda*loss2+args.lamda*loss3
                     loss.backward()
                     optimizer.step()
-
                     # temp += 1
-                    del loss, loss1, loss2, pred
+                    del  pred
                     torch.cuda.empty_cache()
                 i=i+1
+                print("loss1:", loss1)
+                print("loss2", loss2)
+                print("loss3", loss3)
                 del images1, images2, labels
                 torch.cuda.empty_cache()
         print("end Multiteacher distillation")

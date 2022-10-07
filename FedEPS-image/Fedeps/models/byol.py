@@ -98,10 +98,10 @@ class fc_Cifar(nn.Module):
             nn.Dropout(p=0.1),
             # nn.Linear(512, 1024),
             # nn.ReLU(inplace=True),
-            nn.Linear(in_dim, 10),
-            nn.ReLU(inplace=True),
-#             nn.Dropout(p=0.1),
-            nn.Linear(10, 10)
+            nn.Linear(in_dim, 10)
+#             nn.ReLU(inplace=True),
+# #             nn.Dropout(p=0.1),
+#             nn.Linear(10, 10)
         )
         self._initialize_weights()
 

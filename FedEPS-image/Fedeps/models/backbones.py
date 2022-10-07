@@ -148,7 +148,7 @@ class CNN_BN_Mnist(nn.Module):
         if cfg is None:
             cfg = [32, 'M', 48, 'M', 64]   ##first max pooling than normalization?
         self.feature = self.make_layers(cfg, True)
-        self.output_dim = 10 #cfg[-1]*9 ## TODO adhoc
+        self.output_dim = 10 #cfg[-1]*9 ## TODO adhocd
         self.num_classes = 10
         self.classifier = nn.Linear(cfg[-1]*9, self.num_classes)
         # self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
@@ -272,9 +272,10 @@ class CNN_Cifar(nn.Module):
 
 
 class CNN_Cifar_pruned(nn.Module):
-    def __init__(self, cfg=None):
+    def __init__(self, cfg=None,dataset=None):
         super(CNN_Cifar_pruned, self).__init__()
-
+        if(cfg==None):
+            cfg = [32, 'M', 128, 'M', 256,'M']
         self.conv_layer = nn.Sequential(
             nn.Conv2d(in_channels=3, out_channels=cfg[0], kernel_size=3, padding=1),
             nn.BatchNorm2d(cfg[0]),
@@ -297,6 +298,7 @@ class CNN_Cifar_pruned(nn.Module):
             nn.MaxPool2d(kernel_size=2, stride=2),
         )
         self.output_dim = 4096
+        self.num_classes=10
         self._initialize_weights()
 
     def forward(self, x):
